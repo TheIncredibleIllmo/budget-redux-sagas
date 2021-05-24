@@ -7,38 +7,26 @@ import DisplayBalances from './components/DisplayBalances';
 import { useEffect, useState } from 'react';
 import EntryLines from './components/EntryLines';
 import ModalEdit from './components/ModalEdit';
+import { useDispatch, useSelector } from 'react-redux';
+import { getAllEntriesAction } from './redux/actions/entries.actions';
 
 function App() {
-    const [entries, setEntries] = useState(initialEntries);
-    const [description, setDescription] = useState('');
-    const [value, setValue] = useState('');
-    const [isExpense, setIsExpense] = useState(true);
-    const [isOpen, setIsOpen] = useState(false);
-    const [entryId, setEntryId] = useState();
     const [incomeTotal, setIncomeTotal] = useState(0);
     const [expensesTotal, setExpensesTotal] = useState(0);
     const [balance, setBalance] = useState(0);
+    const [entry, setEntry] = useState();
 
-    const resetEntry = () => {
-        setDescription('');
-        setValue(0);
-        setIsExpense(true);
-    };
+    const entries = useSelector((state) => state.entries);
+    const { isOpen, id } = useSelector((state) => state.modals);
+
+    const dispatch = useDispatch();
 
     useEffect(() => {
-        if (!isOpen && entryId) {
-            const index = entries.findIndex((x) => x.id === entryId);
-            const newEntries = [...entries];
-            newEntries[index].description = description;
-            newEntries[index].value = value;
-            newEntries[index].isExpense = isExpense;
-
-            setEntries(newEntries);
-            resetEntry();
-
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-        }
-    }, [isOpen]);
+        const index = entries?.findIndex((x) => x.id === id);
+        const editEntry = entries[index];
+        if (!editEntry) return;
+        setEntry(editEntry);
+    }, [isOpen, id]);
 
     useEffect(() => {
         let totalIncome = 0;
@@ -59,35 +47,9 @@ function App() {
         setBalance(total);
     }, [entries]);
 
-    const deleteEntry = (id) => {
-        const result = entries.filter((x) => x.id !== id);
-        setEntries(result);
-    };
-
-    const editEntry = (id) => {
-        if (!id) return;
-
-        const index = entries.findIndex((x) => x.id === id);
-        const entry = entries[index];
-
-        if (!entry) return;
-
-        setEntryId(id);
-        setDescription(entry.description);
-        setValue(entry.value);
-        setIsExpense(entry.isExpense);
-        setIsOpen(true);
-    };
-
-    const addEntry = () => {
-        const result = entries.concat({
-            id: entries.length + 1,
-            description,
-            value,
-            isExpense,
-        });
-        setEntries(result);
-    };
+    useEffect(() => {
+        dispatch(getAllEntriesAction());
+    }, [dispatch]);
 
     return (
         <Container>
@@ -95,7 +57,9 @@ function App() {
 
             <Statistic size='small'>
                 <Statistic.Label>Your Balance:</Statistic.Label>
-                <Statistic.Value>{balance}</Statistic.Value>
+                <Statistic.Value>
+                    {isNaN(balance) ? 0 : balance}
+                </Statistic.Value>
             </Statistic>
 
             <DisplayBalances
@@ -105,41 +69,15 @@ function App() {
 
             <MainHeader title='History' type='h3' />
 
-            <EntryLines
-                entries={entries}
-                deleteEntry={deleteEntry}
-                editEntry={editEntry}
-            />
+            <EntryLines entries={entries} />
 
             <MainHeader title='Add new transaction' type='h3' />
 
-            <NewEntryForm
-                addEntry={addEntry}
-                description={description}
-                value={value}
-                isExpense={isExpense}
-                setDescription={setDescription}
-                setValue={setValue}
-                setIsExpense={setIsExpense}
-            />
+            <NewEntryForm />
 
-            <ModalEdit
-                isOpen={isOpen}
-                description={description}
-                value={value}
-                isExpense={isExpense}
-                setIsOpen={setIsOpen}
-                setDescription={setDescription}
-                setValue={setValue}
-                setIsExpense={setIsExpense}
-            />
+            <ModalEdit isOpen={isOpen} {...entry} />
         </Container>
     );
 }
 
 export default App;
-
-var initialEntries = [
-    { id: 1, description: 'Work income', value: 2500, isExpense: false },
-    { id: 2, description: 'Music', value: 500, isExpense: true },
-];

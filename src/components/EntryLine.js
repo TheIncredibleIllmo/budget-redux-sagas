@@ -1,14 +1,11 @@
 import React from 'react';
 import { Grid, Segment, Icon } from 'semantic-ui-react';
+import { useDispatch } from 'react-redux';
+import { removeEntryAction } from '../redux/actions/entries.actions';
+import { openEditModal } from '../redux/actions/modals.actions';
 
-function EntryLine({
-    id,
-    isExpense = true,
-    description,
-    value,
-    deleteEntry,
-    editEntry,
-}) {
+function EntryLine({ id, isExpense = true, description, value }) {
+    const dispatch = useDispatch();
     return (
         <>
             <Segment color={isExpense ? 'red' : 'green'}>
@@ -25,12 +22,12 @@ function EntryLine({
                                 name='edit'
                                 bordered
                                 style={{ cursor: 'pointer' }}
-                                onClick={() => editEntry(id)}
+                                onClick={() => dispatch(openEditModal(id))}
                             />
                             <Icon
                                 name='trash'
                                 bordered
-                                onClick={() => deleteEntry(id)}
+                                onClick={() => dispatch(removeEntryAction(id))}
                                 style={{ cursor: 'pointer' }}
                             />
                         </Grid.Column>
